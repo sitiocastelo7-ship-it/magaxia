@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Afiliados | Magaxia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #1a1f3c, #0b0f1a 70%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 50px 30px;
+            border-radius: 28px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 0 35px rgba(0,0,0,0.5);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.6rem;
+            margin-bottom: 10px;
+            background: linear-gradient(90deg, #39c6ff, #b84cff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sub {
+            font-size: 1.1rem;
+            opacity: 0.85;
+            margin-bottom: 45px;
+        }
+
+        .levels {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px;
+        }
+
+        .level {
+            border-radius: 22px;
+            padding: 30px 20px;
+            background: linear-gradient(135deg, rgba(57,198,255,0.15), rgba(184,76,255,0.15));
+            box-shadow: 0 0 25px rgba(0,0,0,0.4);
+            transition: transform 0.25s, box-shadow 0.25s;
+        }
+
+        .level:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 0 35px rgba(57, 198, 255, 0.4);
+        }
+
+        .medal {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .percent {
+            font-size: 2.3rem;
+            font-weight: bold;
+            color: #39c6ff;
+            margin: 10px 0;
+        }
+
+        .btn {
+            display: inline-block;
+            margin-top: 45px;
+            padding: 14px 38px;
+            border-radius: 30px;
+            text-decoration: none;
+            color: white;
+            font-size: 1rem;
+            background: linear-gradient(90deg, #39c6ff, #b84cff);
+            box-shadow: 0 0 25px rgba(184, 76, 255, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.07);
+            box-shadow: 0 0 40px rgba(57, 198, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <h1>🤝 Programa de Indicação</h1>
+    <p class="sub">
+        Indique amigos e ganhe comissões em até 3 níveis automaticamente.
+    </p>
+
+    <div class="levels">
+        <div class="level">
+            <div class="medal">🥇</div>
+            <h3>1º Nível</h3>
+            <div class="percent">30%</div>
+            <p>Ganhe 30% sobre os investimentos dos seus indicados diretos.</p>
+        </div>
+
+        <div class="level">
+            <div class="medal">🥈</div>
+            <h3>2º Nível</h3>
+            <div class="percent">5%</div>
+            <p>Receba 5% dos indicados do seu indicado.</p>
+        </div>
+
+        <div class="level">
+            <div class="medal">🥉</div>
+            <h3>3º Nível</h3>
+            <div class="percent">3%</div>
+            <p>Ganhe 3% do terceiro nível da sua rede.</p>
+        </div>
+    </div>
+
+    <a href="index.html" class="btn">⬅ Voltar ao início</a>
+
+</div>
+
+</body>
+</html>
