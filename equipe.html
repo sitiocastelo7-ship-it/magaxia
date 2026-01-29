@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Equipe & Afiliados</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #0f172a;
+    color: #ffffff;
+    text-align: center;
+}
+
+.container {
+    max-width: 420px;
+    margin: auto;
+    padding: 30px 20px;
+}
+
+h1 {
+    margin-bottom: 20px;
+}
+
+.card {
+    background: rgba(255,255,255,0.08);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.stat {
+    font-size: 1.1rem;
+    margin: 10px 0;
+}
+
+input {
+    width: 100%;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    margin-top: 12px;
+    text-align: center;
+    font-size: 1rem;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    margin-top: 12px;
+    border: none;
+    border-radius: 14px;
+    background: #22c55e;
+    color: #000;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🤝 Programa de Indicação</h1>
+
+    <div class="card">
+        <p><strong>Seu ID / Código de convite:</strong></p>
+        <p id="userId">---</p>
+    </div>
+
+    <div class="card">
+        <p><strong>Seu link de convite</strong></p>
+        <input type="text" id="inviteLink" readonly>
+        <button onclick="copiarLink()">📋 Copiar link</button>
+    </div>
+
+    <div class="card">
+        <div class="stat">👤 Total de convidados: <strong id="total">0</strong></div>
+        <div class="stat">🥇 Nível 1: <strong id="nivel1">0</strong></div>
+        <div class="stat">🥈 Nível 2: <strong id="nivel2">0</strong></div>
+        <div class="stat">🥉 Nível 3: <strong id="nivel3">0</strong></div>
+    </div>
+
+</div>
+
+<script>
+// Firebase (opcional) + fallback localStorage
+// carregar scripts dinamicamente para compatibilidade se necessário
+const firebaseScriptApp = document.createElement('script');
+firebaseScriptApp.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js';
+document.head.appendChild(firebaseScriptApp);
+const firebaseScriptAuth = document.createElement('script');
+firebaseScriptAuth.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js';
+document.head.appendChild(firebaseScriptAuth);
+const firebaseScriptFs = document.createElement('script');
+firebaseScriptFs.src = 'https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js';
+document.head.appendChild(firebaseScriptFs);
+
+// Espera os scripts carregarem
+// gera um código curto no formato mgx-pt######## (8 dígitos)
+function generateShortCodeFromUid(uid){
+    let h = 0;
+    for(let i=0;i<uid.length;i++){
+        h = ((h << 5) - h) + uid.charCodeAt(i);
+        h |= 0;
+    }
+    const num = Math.abs(h) % 100000000;
+    return 'mgx-pt' + String(num).padStart(8, '0');
+}
+
+function generateRandomShortCode(){
+    const num = Math.floor(Math.random() * 100000000);
+    return 'mgx-pt' + String(num).padStart(8, '0');
+}
+
+firebaseScriptFs.onload = () => {
+        const firebaseConfig = {
+            apiKey: "AIzaSyAcVPgUHbL4N9U1-H68klmGKWQF-YGleyc",
+            authDomain: "vastbitloud-2872a.firebaseapp.com",
+            projectId: "vastbitloud-2872a",
+            storageBucket: "vastbitloud-2872a.firebasestorage.app",
+            messagingSenderId: "952931184412",
+            appId: "1:952931184412:web:ee2a0e38826c30dd0cd4d9",
+            measurementId: "G-KWVQ0CFHW2"
+        };
+
+        try{
+            firebase.initializeApp(firebaseConfig);
+            const auth = firebase.auth();
+            const db = firebase.firestore();
+
+            auth.onAuthStateChanged(async user => {
+                    if(user){
+                    // usuário autenticado -> buscar dados no Firestore
+                    try{
+                        const doc = await db.collection('users').doc(user.uid).get();
+                        let codigo;
+                        if(doc.exists){
+                            const d = doc.data();
+                            // se já existe um codigoConvite curto, usa-o
+                            if(d.codigoConvite && String(d.codigoConvite).startsWith('mgx-pt')){
+                                codigo = d.codigoConvite;
+                            } else if(d.codigoConvite){
+                                // detecta formatos longos (UIDs do Firebase) e migra para código curto
+                                const existing = String(d.codigoConvite);
+                                const looksLikeUid = existing.length > 16 && /[A-Z]/.test(existing) && /[a-z]/.test(existing) && /[0-9]/.test(existing);
+                                if(looksLikeUid){
+                                    const newCode = generateShortCodeFromUid(user.uid);
+                                    codigo = newCode;
+                                    db.collection('users').doc(user.uid).set({ codigoConvite: newCode }, { merge: true }).catch(()=>{});
+                                } else {
+                                    codigo = existing;
+                                }
+                            } else {
+                                codigo = generateShortCodeFromUid(user.uid);
+                            }
+                            document.getElementById('nivel1').innerText = d.nivel1 || 0;
+                            document.getElementById('nivel2').innerText = d.nivel2 || 0;
+                            document.getElementById('nivel3').innerText = d.nivel3 || 0;
+                            document.getElementById('total').innerText = (d.nivel1||0) + (d.nivel2||0) + (d.nivel3||0);
+                            // se não existia codigoConvite, tenta salvar o novo curto (silenciosamente)
+                            if(!d.codigoConvite){
+                                db.collection('users').doc(user.uid).set({ codigoConvite: codigo }, { merge: true }).catch(()=>{});
+                            }
+                        } else {
+                            codigo = generateShortCodeFromUid(user.uid);
+                            // tenta salvar para usuários novos
+                            db.collection('users').doc(user.uid).set({ codigoConvite: codigo }, { merge: true }).catch(()=>{});
+                        }
+                        document.getElementById('userId').innerText = codigo;
+                        document.getElementById('inviteLink').value = `https://magaxia.github.io/magaxia/?ref=${codigo}`;
+                    } catch(e){
+                        console.error('Erro ao buscar Firestore', e);
+                        const codigo = generateShortCodeFromUid(user.uid);
+                        document.getElementById('userId').innerText = codigo;
+                        document.getElementById('inviteLink').value = `https://magaxia.github.io/magaxia/?ref=${codigo}`;
+                    }
+                    
+                } else {
+                    // fallback local
+                    setupLocalFallback();
+                }
+            });
+
+            // logout botão (se quiser integrar)
+            window.copiarLink = function(){
+                const campo = document.getElementById('inviteLink');
+                campo.select();
+                campo.setSelectionRange(0, 99999);
+                document.execCommand('copy');
+                alert('Link copiado com sucesso!');
+            }
+
+            window.sair = function(){
+                auth.signOut().then(()=> location.href = 'cadastro.html');
+            }
+
+        } catch(err){
+            console.error('Firebase init error', err);
+            setupLocalFallback();
+        }
+};
+
+// Se scripts Firebase não carregarem em X ms, usa fallback
+setTimeout(()=>{
+    if(typeof firebase === 'undefined') setupLocalFallback();
+}, 3000);
+
+function setupLocalFallback(){
+    if (!localStorage.getItem('userId')) {
+        localStorage.setItem('userId', generateRandomShortCode());
+    }
+    const userId = localStorage.getItem('userId');
+    document.getElementById('userId').innerText = userId;
+    document.getElementById('inviteLink').value = `https://magaxia.github.io/magaxia/?ref=${userId}`;
+    const n1 = parseInt(localStorage.getItem('nivel1') || '0', 10);
+    const n2 = parseInt(localStorage.getItem('nivel2') || '0', 10);
+    const n3 = parseInt(localStorage.getItem('nivel3') || '0', 10);
+    document.getElementById('nivel1').innerText = n1;
+    document.getElementById('nivel2').innerText = n2;
+    document.getElementById('nivel3').innerText = n3;
+    document.getElementById('total').innerText = n1 + n2 + n3;
+
+    window.copiarLink = function(){
+        const campo = document.getElementById('inviteLink');
+        campo.select();
+        campo.setSelectionRange(0, 99999);
+        document.execCommand('copy');
+        alert('Link copiado com sucesso!');
+    }
+
+    window.sair = function(){
+        // fallback: apenas redireciona para cadastro/login
+        location.href = 'cadastro.html';
+    }
+}
+</script>
+
+</body>
+</html>
