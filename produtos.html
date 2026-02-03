@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Produtos | Magaxia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Segoe UI,Tahoma,sans-serif}
+body{
+    min-height:100vh;
+    background:radial-gradient(circle at top,#1a1f3c,#0b0f1a 70%);
+    color:#fff;
+    padding:40px 20px
+}
+h1{
+    text-align:center;
+    font-size:2.6rem;
+    margin-bottom:15px;
+    background:linear-gradient(90deg,#39c6ff,#b84cff);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent
+}
+.subtitulo{text-align:center;opacity:.85;margin-bottom:45px}
+.produtos{
+    max-width:1200px;
+    margin:auto;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+    gap:30px
+}
+.card{
+    background:rgba(255,255,255,.06);
+    border-radius:22px;
+    padding:24px;
+    text-align:center;
+    backdrop-filter:blur(12px);
+    box-shadow:0 0 30px rgba(0,0,0,.45);
+    transition:.25s
+}
+.card:hover{transform:translateY(-8px)}
+.produto-img{
+    width:100%;
+    height:160px;
+    object-fit:cover;
+    border-radius:16px;
+    margin-bottom:18px
+}
+.chip{font-size:1.25rem;font-weight:bold}
+.valor{font-size:2rem;margin:15px 0;color:#39c6ff;font-weight:bold}
+.info{margin:8px 0;opacity:.9}
+.destaque{color:#b84cff;font-weight:bold}
+.btn-comprar{
+    margin-top:22px;
+    padding:14px 34px;
+    border-radius:30px;
+    border:none;
+    cursor:pointer;
+    color:#fff;
+    background:linear-gradient(90deg,#39c6ff,#b84cff)
+}
+.voltar{
+    display:block;
+    margin:55px auto 0;
+    width:fit-content;
+    padding:14px 34px;
+    border-radius:30px;
+    background:linear-gradient(90deg,#39c6ff,#b84cff);
+    color:#fff;
+    text-decoration:none
+}
+</style>
+</head>
+
+<body>
+
+<h1>📦 Produtos Magaxia</h1>
+<p class="subtitulo">Escolha o chip ideal e comece a gerar renda diária</p>
+
+<div class="produtos">
+
+<!-- PRODUTO 1 -->
+<div class="card">
+<img class="produto-img" src="CHIP CPU S02.png" alt="Chip CPU S02">
+<div class="chip">⚙️ Chip: CPU S02</div>
+<div class="valor">R$ 10</div>
+<div class="info">💰 Renda diária: <span class="destaque">R$ 3</span></div>
+<div class="info">🔁 Ciclo: 30 dias</div>
+<button class="btn-comprar">Comprar</button>
+</div>
+
+<!-- PRODUTO 2 -->
+<div class="card">
+<img class="produto-img" src="CPU S04.png" alt="Chip CPU S04">
+<div class="chip">⚙️ Chip: CPU S04</div>
+<div class="valor">R$ 20</div>
+<div class="info">💰 Renda diária: <span class="destaque">R$ 12</span></div>
+<div class="info">🔁 Ciclo: 30 dias</div>
+<button class="btn-comprar">Comprar</button>
+</div>
+
+<!-- PRODUTO 3 -->
+<div class="card">
+<img class="produto-img" src="CPU S06.png" alt="Chip CPU S06">
+<div class="chip">⚙️ Chip: CPU S06</div>
+<div class="valor">R$ 30</div>
+<div class="info">💰 Renda diária: <span class="destaque">R$ 17</span></div>
+<div class="info">🔁 Ciclo: 30 dias</div>
+<button class="btn-comprar">Comprar</button>
+</div>
+
+<!-- PRODUTO 4 -->
+<div class="card">
+<img class="produto-img" src="CPU S08.png" alt="Chip CPU S08">
+<div class="chip">⚙️ Chip: CPU S08</div>
+<div class="valor">R$ 65</div>
+<div class="info">💰 Renda diária: <span class="destaque">R$ 25</span></div>
+<div class="info">🔁 Ciclo: 30 dias</div>
+<button class="btn-comprar">Comprar</button>
+</div>
+
+<!-- PRODUTO 5 -->
+<div class="card">
+<img class="produto-img" src="CPU S10.png" alt="Chip CPU S10">
+<div class="chip">⚙️ Chip: CPU S10</div>
+<div class="valor">R$ 85</div>
+<div class="info">💰 Renda diária: <span class="destaque">R$ 34</span></div>
+<div class="info">🔁 Ciclo: 30 dias</div>
+<button class="btn-comprar">Comprar</button>
+</div>
+
+</div>
+
+<a href="index.html" class="voltar">⬅ Voltar para o início</a>
+
+</body>
+</html>

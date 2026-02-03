@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Saque</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<style>
+:root{
+  --bg-1:#0b1224;
+  --bg-2:#12162a;
+  --accent-1:#39c6ff;
+  --accent-2:#b84cff;
+  --muted:rgba(255,255,255,0.7);
+  --radius:16px;
+  --container-w:420px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  font-family:Inter,Arial;
+  color:#fff;
+  background:radial-gradient(1200px 600px at 10% 10%,var(--bg-2),var(--bg-1));
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  visibility:hidden;
+}
+.container{max-width:var(--container-w);width:100%;text-align:center}
+.card{
+  background:rgba(255,255,255,0.04);
+  border-radius:var(--radius);
+  padding:28px;
+  backdrop-filter:blur(8px);
+}
+#saldo{font-size:36px;margin:12px 0}
+.field{margin-top:14px}
+input,select{
+  width:100%;
+  padding:12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.15);
+  background:transparent;
+  color:#fff;
+  text-align:center;
+}
+select option{color:#000}
+button{
+  margin-top:18px;
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:999px;
+  font-weight:600;
+  color:#fff;
+  cursor:pointer;
+  background:linear-gradient(90deg,var(--accent-1),var(--accent-2));
+}
+button:disabled{opacity:.5;cursor:not-allowed}
+.small{font-size:13px;color:var(--muted);margin-top:12px}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2>💸 SAQUE</h2>
+  <div class="card">
+
+    <p>Saldo disponível</p>
+    <div id="saldo">R$ 0,00</div>
+
+    <div class="field">
+      <input type="number" id="valor" placeholder="Valor do saque">
+    </div>
+
+    <div class="field">
+      <select id="tipoPix" onchange="atualizarPlaceholder()">
+        <option value="">Tipo de chave Pix</option>
+        <option value="cpf">CPF</option>
+        <option value="email">E-mail</option>
+        <option value="telefone">Telefone</option>
+        <option value="aleatoria">Aleatória</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <input type="text" id="chave" placeholder="Chave Pix">
+    </div>
+
+    <button id="btn" onclick="solicitarSaque()" disabled>Solicitar Saque</button>
+
+    <div class="small" style="text-align:left;line-height:1.5">
+      ⏰ Horário: 10h às 17h<br>
+      🔄 1 saque por dia<br>
+      ✅ Mínimo: R$ 30<br>
+      💸 Taxa: 7%<br>
+      🕒 Prazo: até 24h
+    </div>
+
+  </div>
+</div>
+
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyAcVPgUHbL4N9U1-H68klmGKWQF-YGleyc",
+  authDomain:"vastbitloud-2872a.firebaseapp.com",
+  projectId:"vastbitloud-2872a"
+};
+firebase.initializeApp(firebaseConfig);
+
+const auth=firebase.auth();
+const db=firebase.firestore();
+let saldoAtual=0;
+let uid=null;
+const formatador=new Intl.NumberFormat("pt-BR",{style:"currency",currency:"BRL"});
+
+function dentroDoHorarioPermitido(){
+  const h=new Date().getHours();
+  return h>=10 && h<17;
+}
+
+async function atualizarEstadoBotao(){
+  const btn=document.getElementById("btn");
+
+  if(saldoAtual<30 || !dentroDoHorarioPermitido()){
+    btn.disabled=true;
+    return;
+  }
+
+  const inicioHoje=new Date();
+  inicioHoje.setHours(0,0,0,0);
+
+  const q=await db.collection("saques")
+    .where("uid","==",uid)
+    .where("data",">=",inicioHoje)
+    .limit(1)
+    .get();
+
+  btn.disabled=!q.empty;
+}
+
+auth.onAuthStateChanged(async user=>{
+  uid=user?.uid;
+  if(!uid){
+    document.body.style.visibility="visible";
+    return;
+  }
+
+  const doc=await db.collection("users").doc(uid).get();
+  saldoAtual=doc.exists?doc.data().saldo||0:0;
+  document.getElementById("saldo").innerText=formatador.format(saldoAtual);
+  await atualizarEstadoBotao();
+  document.body.style.visibility="visible";
+});
+
+function atualizarPlaceholder(){
+  const map={
+    cpf:"CPF (somente números)",
+    email:"email@exemplo.com",
+    telefone:"+5511999999999",
+    aleatoria:"Chave aleatória"
+  };
+  const tipo=document.getElementById("tipoPix").value;
+  document.getElementById("chave").placeholder=map[tipo]||"Chave Pix";
+}
+
+function validarChave(tipo,chave){
+  const r={
+    cpf:/^\d{11}$/,
+    email:/^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+    telefone:/^\+55\d{11}$/,
+    aleatoria:/^[a-f0-9-]{32,36}$/i
+  };
+  return r[tipo]?.test(chave);
+}
+
+async function solicitarSaque(){
+  if(!dentroDoHorarioPermitido()) return alert("Saques apenas das 10h às 17h.");
+
+  const valor=Number(valorInput=document.getElementById("valor").value);
+  const tipo=document.getElementById("tipoPix").value;
+  const chave=document.getElementById("chave").value.trim();
+
+  if(valor<30) return alert("Valor mínimo R$ 30.");
+  if(valor>saldoAtual) return alert("Saldo insuficiente.");
+  if(!tipo||!validarChave(tipo,chave)) return alert("Chave Pix inválida.");
+
+  const inicioHoje=new Date();
+  inicioHoje.setHours(0,0,0,0);
+
+  const q=await db.collection("saques")
+    .where("uid","==",uid)
+    .where("data",">=",inicioHoje)
+    .limit(1)
+    .get();
+
+  if(!q.empty) return alert("Você já sacou hoje.");
+
+  await db.collection("saques").add({
+    uid,valor,tipoPix:tipo,chave,status:"pendente",
+    data:firebase.firestore.FieldValue.serverTimestamp()
+  });
+
+  await db.collection("users").doc(uid).update({saldo:saldoAtual-valor});
+  saldoAtual-=valor;
+
+  document.getElementById("saldo").innerText=formatador.format(saldoAtual);
+  document.getElementById("valor").value="";
+  document.getElementById("chave").value="";
+
+  await atualizarEstadoBotao();
+  alert("Saque solicitado com sucesso.");
+}
+</script>
+
+</body>
+</html>

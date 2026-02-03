@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Depósito • Magaxia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<!-- QRCode -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,sans-serif}
+body{
+    min-height:100vh;
+    background: radial-gradient(circle at top, #1a1f3c, #0b0f1a 70%);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    color:white;
+    visibility:hidden;
+}
+.container{padding:40px;max-width:420px;width:100%;text-align:center}
+.logo{max-width:220px;margin-bottom:20px}
+h1{
+    font-size:2.6rem;
+    letter-spacing:3px;
+    background:linear-gradient(90deg,#39c6ff,#b84cff);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+.card{
+    margin-top:30px;
+    background:rgba(255,255,255,0.08);
+    padding:25px;
+    border-radius:20px;
+}
+.valores{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+    margin-top:10px;
+}
+.valor-btn{
+    padding:12px;
+    border-radius:25px;
+    border:none;
+    cursor:pointer;
+    background:rgba(255,255,255,0.15);
+    color:white;
+    font-weight:bold;
+}
+.valor-btn:hover{
+    background:linear-gradient(90deg,#39c6ff,#b84cff);
+}
+input,button{
+    width:100%;
+    padding:14px;
+    margin-top:14px;
+    border-radius:30px;
+    border:none;
+    text-align:center;
+}
+button{
+    cursor:pointer;
+    background:linear-gradient(90deg,#39c6ff,#b84cff);
+    color:white;
+}
+#qrcode{margin-top:20px}
+.info{margin-top:15px;font-size:.9rem;opacity:.7}
+.back{margin-top:25px;font-size:.9rem;opacity:.7;cursor:pointer}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+    <img src="logo.png" class="logo">
+
+    <h1>DEPÓSITO</h1>
+    <p>Escolha um valor e pague via Pix</p>
+
+    <div class="card">
+
+        <!-- BOTÕES DE VALOR FIXO -->
+        <div class="valores">
+            <button class="valor-btn" onclick="setValor(10)">R$ 10</button>
+            <button class="valor-btn" onclick="setValor(20)">R$ 20</button>
+            <button class="valor-btn" onclick="setValor(30)">R$ 30</button>
+            <button class="valor-btn" onclick="setValor(65)">R$ 65</button>
+            <button class="valor-btn" onclick="setValor(85)">R$ 85</button>
+        </div>
+
+        <input type="number" id="valor" placeholder="💰 Valor do depósito (R$)">
+
+        <button onclick="gerarPix()">📲 Gerar QR Code Pix</button>
+
+        <div id="qrcode"></div>
+
+        <!-- Área para exibir o código PIX e botão de copiar (aparece quando o valor for R$10) -->
+        <div id="pix-area" style="display:none; margin-top:12px; text-align:left;">
+            <!-- Salve a foto que você enviou como 'pix-10.png' na mesma pasta deste HTML para que ela apareça aqui. -->
+            <textarea id="pixCode" readonly style="width:100%; padding:10px; border-radius:10px; resize:none; height:74px;"></textarea>
+            <button id="copyPixBtn" onclick="copyPixCode()" style="margin-top:10px;">📋 Copiar código Pix</button>
+        </div>
+
+        <button onclick="confirmar()">📥 Já fiz o Pix</button>
+
+        <div class="info">
+            O saldo será creditado após aprovação do administrador.
+        </div>
+    </div>
+
+    <div class="back" onclick="window.location.href='index.html'">
+        ← Voltar
+    </div>
+</div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAcVPgUHbL4N9U1-H68klmGKWQF-YGleyc",
+  authDomain: "vastbitloud-2872a.firebaseapp.com",
+  projectId: "vastbitloud-2872a"
+};
+if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+let uid = null;
+let valorAtual = 0;
+
+// 🔐 Login
+auth.onAuthStateChanged(user=>{
+    if(!user){ location.href="login.html"; return;}
+    uid = user.uid;
+    document.body.style.visibility="visible";
+});
+
+// 🎯 DEFINIR VALOR PELO BOTÃO
+function setValor(v){
+    valorAtual = v;
+    document.getElementById("valor").value = v;
+}
+
+// Mantém `valorAtual` sincronizado com o campo de input quando o usuário digita
+document.addEventListener('DOMContentLoaded', ()=>{
+    const inp = document.getElementById('valor');
+    if(inp){
+        inp.addEventListener('input', (e)=>{
+            const n = Number(e.target.value) || 0;
+            valorAtual = n;
+        });
+    }
+});
+
+// 🔳 GERAR PIX
+function gerarPix(){
+    // Ler o valor atual diretamente do input (garante que digitação funcione)
+    const inp = document.getElementById('valor');
+    if(inp){
+        const parsed = Number(inp.value);
+        if(!isNaN(parsed)) valorAtual = parsed;
+    }
+
+    if(valorAtual <= 0){
+        alert("Selecione um valor");
+        return;
+    }
+
+    const qrcodeEl = document.getElementById("qrcode");
+    const pixArea = document.getElementById("pix-area");
+    const pixCodeEl = document.getElementById("pixCode");
+    qrcodeEl.innerHTML = "";
+    if(pixArea) pixArea.style.display = "none";
+
+    // Caso especial: quando o valor for R$10 mostrar o código fixo solicitado e a imagem enviada
+    if(Number(valorAtual) === 10){
+        const pixCode = "00020101021226860014br.gov.bcb.pix2564qrcode.fitbank.com.br/QR/cob/4FB04DE878AE66CC4F60B3E0001CBECBAB15204000053039865802BR5925PLEBANK.COM.BR SOLUCOES E6007BARUERI61080645400062070503***6304F02E";
+
+        if(pixCodeEl){
+            pixCodeEl.value = pixCode;
+            pixArea.style.display = "block";
+        }
+
+        // Tentar exibir a imagem fornecida pelo usuário (salve-a como 'pix-10.png' na mesma pasta do HTML)
+        const img = document.createElement("img");
+        img.alt = "QR Pix R$10";
+        img.width = 180;
+        img.height = 180;
+        img.style.borderRadius = "8px";
+        img.onerror = function(){
+            // Se a imagem não existir, gerar um QR a partir do código acima
+            new QRCode(qrcodeEl, { text: pixCode, width: 180, height: 180 });
+        };
+        img.src = "pix-10.png"; // nome sugerido para a imagem enviada
+        qrcodeEl.appendChild(img);
+        return;
+    }
+
+    // Comportamento padrão para outros valores (gera QR com payload simples)
+    const payloadPix = `PIX|VALOR:${valorAtual}|UID:${uid}`;
+
+    new QRCode(qrcodeEl, {
+        text: payloadPix,
+        width: 180,
+        height: 180
+    });
+}
+
+// Copiar o código Pix para a área de transferência
+function copyPixCode(){
+    const pixCode = document.getElementById('pixCode').value;
+    if(!pixCode) return;
+    navigator.clipboard.writeText(pixCode).then(()=>{
+        alert('Código Pix copiado!');
+    }).catch(()=>{
+        // Fallback quando o clipboard não estiver disponível
+        const input = document.createElement('input');
+        document.body.appendChild(input);
+        input.value = pixCode;
+        input.select();
+        document.execCommand('copy');
+        document.body.removeChild(input);
+        alert('Código Pix copiado!');
+    });
+}
+
+// 💾 REGISTRAR DEPÓSITO
+async function confirmar(){
+    if(valorAtual <= 0){
+        alert("Selecione um valor primeiro");
+        return;
+    }
+
+    await db.collection("depositos").add({
+        uid,
+        valor: valorAtual,
+        status: "pendente",
+        data: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    alert("Depósito registrado! Aguarde aprovação.");
+    location.reload();
+}
+</script>
+
+<script>
+(function(){
+    const fixedQR = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAABAAAAAQACAIAAADwf7zUAABGdElEQVR4nOzdCZBc6UEn+O97mVW61fd9qC+33bZ7fLWNbOMLD9hcNmCzwAx3DGKImGFnlw2Wjd3VzGpjI3YDNvYAhg2xO8SyjA3M2AwYm8GAbYwx8mBjg+228dHts9t9qKXW0Toq8/s28r2XpWp1qSSlWq9e5/f7uS2VqvLl+97Ll1nf/33XMOccAACAMlTrXQAAAKA7AgAAABREAAAAgIIIAAAAUBABAAAACiIAAABAQQQAAAAoiAAAAAAFEQAAAKAgAgAAABREAAAAgIIIAAAAUBABAAAACiIAAABAQQQAAAAoiAAAAAAFEQAAAKAgAgAAABREAAAAgIIIAAAAUBABAAAACiIAAABAQQQAAAAoiAAAAAAFEQAAAKAgAgAAABREAAAAgIIIAAAAUBABAAAACiIAAABAQQQAAAAoiAAAAAAFEQAAAKAgAgAAABREAAAA';
+
+    function createImg(){
+        const img = document.createElement('img');
+        img.src = fixedQR;
+        img.alt = 'QR fixo';
+        img.width = 180;
+        img.height = 180;
+        img.style.borderRadius = '8px';
+        img.dataset.fixedQr = 'true';
+        return img;
+    }
+
+    function applyFixed(){
+        // Replace contents of any empty #qrcode container with the fixed image
+        // If #qrcode already contains an image/canvas (e.g. pix-10.png or generated QR), preserve it.
+        document.querySelectorAll('#qrcode').forEach(q=>{
+            if(!q) return;
+            if(q.children && q.children.length > 0) return; // preserve existing QR content
+            q.innerHTML = '';
+            q.appendChild(createImg());
+            q.dataset.fixedQrContainer = 'true';
+        });
+
+        // Replace any canvas that is NOT inside #qrcode (some QR libs render canvas elsewhere)
+        document.querySelectorAll('canvas').forEach(c=>{
+            if(c.closest && c.closest('#qrcode')) return; // keep canvases inside #qrcode
+            const img = createImg();
+            if(c.parentNode) c.parentNode.replaceChild(img,c);
+        });
+
+        // Force any img that looks like a QR to use the fixed image, but preserve obvious user-provided images
+        document.querySelectorAll('img').forEach(img=>{
+            if(img.dataset.fixedQr === 'true') return;
+            if(img.closest && img.closest('#qrcode')) return; // preserve images inside #qrcode generated by app
+            if(/pix-10\.png$/i.test((img.src||'')) || /qr pix r\$10/i.test(img.alt || '')) return; // preserve explicit pix-10 image
+            if(img.classList.contains('qrcode') || img.id==='qrcode' || img.dataset.qr !== undefined || /qr/i.test(img.alt || '')){
+                img.src = fixedQR;
+                img.dataset.fixedQr = 'true';
+            }
+        });
+    }
+
+    applyFixed();
+    const mo = new MutationObserver(()=> applyFixed());
+    mo.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: ['src','data-value'] });
+})();
+</script>
+
+</body>
+</html>
