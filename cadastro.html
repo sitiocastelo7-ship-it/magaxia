@@ -105,28 +105,40 @@ window.onload = async function(){
     const paramKey = refParam ? "ref" : (inviteParam ? "invite" : null);
 
     if(paramValue){
-        const valido = await validarConvite(paramValue);
-
-        if(valido){
-            ref = valido;
-
-            const campo = document.getElementById("codigoConvite");
-            campo.value = ref;
+        const campo = document.getElementById("codigoConvite");
+        if(campo){
+            campo.value = paramValue;
             campo.readOnly = true;
+        }
 
-            document.getElementById("msgConvite").innerText =
-                "🎉 Você foi convidado por um parceiro Magaxia";
+        document.getElementById("msgConvite").innerText = "🔎 Validando código de convite...";
+        console.log("Auto-fill param detected:", paramKey, paramValue);
 
-            origemConvite = {
-                ref: ref,
-                url: window.location.href,
-                userAgent: navigator.userAgent,
-                data: new Date().toISOString()
-            };
-        }else{
-            alert("⚠️ Código de convite inválido.");
-            if(paramKey) url.searchParams.delete(paramKey);
-            window.history.replaceState({}, "", url);
+        try{
+            const valido = await validarConvite(paramValue);
+            if(valido){
+                ref = valido;
+                document.getElementById("msgConvite").innerText = "🎉 Você foi convidado por um parceiro Magaxia";
+
+                origemConvite = {
+                    ref: ref,
+                    url: window.location.href,
+                    userAgent: navigator.userAgent,
+                    data: new Date().toISOString()
+                };
+                console.log("Convite válido:", valido);
+            }else{
+                console.warn("Convite inválido:", paramValue);
+                alert("⚠️ Código de convite inválido.");
+                if(paramKey) url.searchParams.delete(paramKey);
+                window.history.replaceState({}, "", url);
+                if(campo){ campo.value = ""; campo.readOnly = false; }
+                document.getElementById("msgConvite").innerText = "";
+            }
+        }catch(e){
+            console.error("Erro ao validar convite:", e);
+            // em caso de erro de rede/permiso, mantenha o valor visível para o usuário
+            document.getElementById("msgConvite").innerText = "⚠️ Não foi possível validar o convite agora.";
         }
     }
 };
