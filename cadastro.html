@@ -90,42 +90,40 @@ let origemConvite = null;
 // ===============================
 async function validarConvite(uid){
     if(!uid) return null;
-    // Aceita qualquer código de convite automaticamente
-    return uid;
+    try{
+        const doc = await db.collection("users").doc(uid).get();
+        return doc.exists ? uid : null;
+    }catch(e){
+        console.error("Erro ao validar convite:", e);
+        return null;
+    }
 }
 
 // ===============================
 // 🔗 AUTO PREENCHIMENTO VIA LINK
 // ===============================
-function preencherConvite(){
+async function preencherConvite(){
     const url = new URL(window.location.href);
     const refParam = url.searchParams.get("ref");
     const inviteParam = url.searchParams.get("invite");
     const paramValue = refParam || inviteParam;
     const paramKey = refParam ? "ref" : (inviteParam ? "invite" : null);
 
-    console.log("preencherConvite() chamado. paramValue:", paramValue);
-
     if(paramValue){
         const campo = document.getElementById("codigoConvite");
         const msgDiv = document.getElementById("msgConvite");
         
-        console.log("Campo encontrado:", !!campo);
-        console.log("MsgDiv encontrado:", !!msgDiv);
-        
         if(campo){
             campo.value = paramValue;
             campo.readOnly = true;
-            console.log("Campo preenchido com:", paramValue);
         }
 
         if(msgDiv){
             msgDiv.innerText = "🔎 Validando código de convite...";
         }
-        console.log("Auto-fill param detected:", paramKey, paramValue);
 
         try{
-            const valido = validarConvite(paramValue);
+            const valido = await validarConvite(paramValue);
             if(valido){
                 ref = valido;
                 if(msgDiv){
@@ -141,6 +139,7 @@ function preencherConvite(){
                 console.log("Convite válido:", valido);
             }else{
                 console.warn("Convite inválido:", paramValue);
+                alert("⚠️ Código de convite inválido.");
                 if(paramKey) url.searchParams.delete(paramKey);
                 window.history.replaceState({}, "", url);
                 if(campo){ campo.value = ""; campo.readOnly = false; }
