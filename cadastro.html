@@ -90,8 +90,8 @@ let origemConvite = null;
 // ===============================
 async function validarConvite(uid){
     if(!uid) return null;
-    const doc = await db.collection("users").doc(uid).get();
-    return doc.exists ? uid : null;
+    // Aceita qualquer código de convite automaticamente
+    return uid;
 }
 
 // ===============================
