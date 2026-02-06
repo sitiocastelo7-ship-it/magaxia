@@ -100,9 +100,12 @@ async function validarConvite(uid){
 window.onload = async function(){
     const url = new URL(window.location.href);
     const refParam = url.searchParams.get("ref");
+    const inviteParam = url.searchParams.get("invite");
+    const paramValue = refParam || inviteParam;
+    const paramKey = refParam ? "ref" : (inviteParam ? "invite" : null);
 
-    if(refParam){
-        const valido = await validarConvite(refParam);
+    if(paramValue){
+        const valido = await validarConvite(paramValue);
 
         if(valido){
             ref = valido;
@@ -122,7 +125,7 @@ window.onload = async function(){
             };
         }else{
             alert("⚠️ Código de convite inválido.");
-            url.searchParams.delete("ref");
+            if(paramKey) url.searchParams.delete(paramKey);
             window.history.replaceState({}, "", url);
         }
     }
