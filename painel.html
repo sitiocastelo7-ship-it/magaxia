@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Magaxia</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+
+<style>
+body{
+  background:#070617;
+  color:#fff;
+  font-family:Inter,Arial,sans-serif;
+  display:flex;
+  justify-content:center;
+  padding:30px 12px 120px;
+}
+.container{
+  max-width:440px;
+  width:100%;
+  text-align:center;
+}
+.btn{
+  width:100%;
+  padding:14px;
+  border:none;
+  border-radius:14px;
+  margin-top:12px;
+  font-weight:bold;
+  cursor:pointer;
+}
+.nav{
+  position:fixed;
+  bottom:20px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:18px;
+}
+.nav a{
+  color:#fff;
+  text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h1>MAGAXIA</h1>
+
+  <button class="btn" onclick="location.href='produtos.html'">🧩 Produtos</button>
+  <button class="btn" onclick="location.href='equipe.html'">👥 Equipe</button>
+  <button class="btn" onclick="location.href='deposito.html'">💠 Depósito</button>
+  <button class="btn" onclick="location.href='saque.html'">💸 Saque</button>
+
+  <p style="margin-top:20px">💎 Invista e construa seu futuro 🚀</p>
+</div>
+
+<div class="nav">
+  <a href="painel.html">🏠 Home</a>
+  <a href="produtos.html">🧩 Produtos</a>
+  <a href="equipe.html">🧑‍🤝‍🧑 Equipe</a>
+  <a href="ativos.html">📊‍ Ativos</a>
+  <a href="perfil.html">🧑 Perfil</a>
+</div>
+
+<script>
+const firebaseConfig={
+  apiKey:"AIzaSyAcVPgUHbL4N9U1-H68klmGKWQF-YGleyc",
+  authDomain:"vastbitloud-2872a.firebaseapp.com",
+  projectId:"vastbitloud-2872a"
+};
+
+firebase.initializeApp(firebaseConfig);
+
+firebase.auth().onAuthStateChanged(user=>{
+  if(!user){
+    window.location.href="index.html";
+  }
+});
+</script>
+
+</body>
+</html>
