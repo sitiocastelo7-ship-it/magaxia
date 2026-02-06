@@ -70,17 +70,24 @@ const auth=firebase.auth();
 const db=firebase.firestore();
 
 // ==================================================
-// 🔗 AUTOMÁTICO: CAPTURAR ?ref DO LINK DE CONVITE
+// 🔗 AUTOMÁTICO CORRIGIDO (GARANTIDO)
 // ==================================================
-const params = new URLSearchParams(window.location.search);
-const ref = params.get("ref");
+let ref = null;
 
-// 🔗 SE VEIO PELO LINK, PREENCHE O CÓDIGO AUTOMATICAMENTE
-if(ref){
-    const campoConvite = document.getElementById("codigoConvite");
-    campoConvite.value = ref;      // preenche sozinho
-    campoConvite.readOnly = true;  // trava para não alterar
-}
+document.addEventListener("DOMContentLoaded", () => {
+    const params = new URLSearchParams(window.location.search);
+    ref = params.get("ref");
+
+    console.log("REF CAPTURADO:", ref); // debug
+
+    if(ref){
+        const campoConvite = document.getElementById("codigoConvite");
+        if(campoConvite){
+            campoConvite.value = ref;
+            campoConvite.readOnly = true;
+        }
+    }
+});
 
 // ==================================================
 // 🧾 CADASTRO (ORIGINAL)
@@ -136,7 +143,7 @@ async function cadastrar(){
             createdAt:firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // 🔗 PROCESSAR INDICAÇÃO (ORIGINAL)
+        // 🔗 PROCESSAR INDICAÇÃO
         if(refToUse){
             const refDoc=await db.collection("users").doc(refToUse).get();
             if(refDoc.exists){
