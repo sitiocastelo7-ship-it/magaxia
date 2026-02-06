@@ -5,6 +5,7 @@
 <title>Cadastro</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- FIREBASE -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -37,6 +38,11 @@ button{
 input[readonly]{
     opacity:.7;
 }
+.msg{
+    margin-top:10px;
+    font-size:.9rem;
+    color:#38bdf8;
+}
 </style>
 </head>
 
@@ -50,15 +56,19 @@ input[readonly]{
     <input type="password" id="confirmSenha" placeholder="Confirmar senha">
     <input type="text" id="codigoConvite" placeholder="Código de convite (opcional)">
 
+    <div id="msgConvite" class="msg"></div>
+
     <button onclick="cadastrar()">Cadastrar</button>
 
-    <p style="margin-top:8px;font-size:.95rem;color:#cbd5e1">
+    <p style="margin-top:10px;color:#cbd5e1">
         Já tem conta? <a href="login.html" style="color:#60a5fa">Entrar</a>
     </p>
 </div>
 
 <script>
-// 🔥 FIREBASE CONFIG (ORIGINAL)
+// ===============================
+// 🔥 FIREBASE CONFIG
+// ===============================
 const firebaseConfig={
   apiKey:"AIzaSyAcVPgUHbL4N9U1-H68klmGKWQF-YGleyc",
   authDomain:"vastbitloud-2872a.firebaseapp.com",
@@ -69,102 +79,138 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-// ==================================================
-// 🔗 AUTOMÁTICO CORRIGIDO (FUNCIONA SEM FALHAR)
-// ==================================================
+// ===============================
+// 🔒 VARIÁVEIS GLOBAIS
+// ===============================
 let ref = null;
+let origemConvite = null;
 
-window.onload = function () {
+// ===============================
+// 🔍 VALIDAR CONVITE NO FIRESTORE
+// ===============================
+async function validarConvite(uid){
+    if(!uid) return null;
+    const doc = await db.collection("users").doc(uid).get();
+    return doc.exists ? uid : null;
+}
+
+// ===============================
+// 🔗 AUTO PREENCHIMENTO VIA LINK
+// ===============================
+window.onload = async function(){
     const url = new URL(window.location.href);
-    ref = url.searchParams.get("ref");
+    const refParam = url.searchParams.get("ref");
 
-    if (ref) {
-        const campoConvite = document.getElementById("codigoConvite");
-        campoConvite.value = ref;
-        campoConvite.readOnly = true;
+    if(refParam){
+        const valido = await validarConvite(refParam);
+
+        if(valido){
+            ref = valido;
+
+            const campo = document.getElementById("codigoConvite");
+            campo.value = ref;
+            campo.readOnly = true;
+
+            document.getElementById("msgConvite").innerText =
+                "🎉 Você foi convidado por um parceiro Magaxia";
+
+            origemConvite = {
+                ref: ref,
+                url: window.location.href,
+                userAgent: navigator.userAgent,
+                data: new Date().toISOString()
+            };
+        }else{
+            alert("⚠️ Código de convite inválido.");
+            url.searchParams.delete("ref");
+            window.history.replaceState({}, "", url);
+        }
     }
 };
 
-// ==================================================
-// 🧾 CADASTRO (ORIGINAL)
-// ==================================================
+// ===============================
+// 🧾 CADASTRO
+// ===============================
 async function cadastrar(){
-    const nome=document.getElementById("nome").value.trim();
-    const telefone=document.getElementById("telefone").value.trim();
-    const senha=document.getElementById("senha").value;
-    const confirmSenha=document.getElementById("confirmSenha").value;
-    const codigoConvite=document.getElementById("codigoConvite").value.trim();
+    const nome = document.getElementById("nome").value.trim();
+    const telefone = document.getElementById("telefone").value.trim();
+    const senha = document.getElementById("senha").value;
+    const confirmSenha = document.getElementById("confirmSenha").value;
+    const codigoDigitado = document.getElementById("codigoConvite").value.trim();
 
     if(!nome || !telefone || !senha){
-        alert("Preencha nome, telefone e senha.");
+        alert("Preencha todos os campos obrigatórios.");
         return;
     }
-    if(senha!==confirmSenha){
+    if(senha !== confirmSenha){
         alert("As senhas não coincidem.");
         return;
     }
 
     // prioridade: campo > link
-    const refToUse = codigoConvite || ref || null;
+    const refToUse = codigoDigitado || ref || null;
 
     // verificar telefone duplicado
-    const existing=await db.collection("users").where("telefone","==",telefone).get();
+    const existing = await db.collection("users")
+        .where("telefone","==",telefone).get();
+
     if(!existing.empty){
         alert("Telefone já cadastrado.");
         return;
     }
 
     // email sintético
-    const telNorm=telefone.replace(/\D/g,"");
-    const email=`user${telNorm || Date.now()}@noemail.local`;
+    const telNorm = telefone.replace(/\D/g,"");
+    const email = `user${telNorm || Date.now()}@noemail.local`;
 
     try{
-        const cred=await auth.createUserWithEmailAndPassword(email,senha);
-        const user=cred.user;
+        const cred = await auth.createUserWithEmailAndPassword(email,senha);
+        const user = cred.user;
 
-        // salvar nome no Auth
         await user.updateProfile({ displayName:nome });
 
-        // salvar no Firestore
         await db.collection("users").doc(user.uid).set({
-            uid:user.uid,
-            nome:nome,
-            telefone:telefone,
-            authEmail:email,
-            codigoConvite:user.uid,
-            ref:refToUse,
-            nivel1:0,
-            nivel2:0,
-            nivel3:0,
-            createdAt:firebase.firestore.FieldValue.serverTimestamp()
+            uid: user.uid,
+            nome: nome,
+            telefone: telefone,
+            authEmail: email,
+            codigoConvite: user.uid,
+            ref: refToUse,
+            origemConvite: origemConvite,
+            nivel1: 0,
+            nivel2: 0,
+            nivel3: 0,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // 🔗 PROCESSAR INDICAÇÃO (ORIGINAL)
+        // ===============================
+        // 📈 PROCESSAR INDICAÇÃO
+        // ===============================
         if(refToUse){
-            const refDoc=await db.collection("users").doc(refToUse).get();
+            const refDoc = await db.collection("users").doc(refToUse).get();
             if(refDoc.exists){
                 await db.collection("users").doc(refToUse).update({
-                    nivel1:firebase.firestore.FieldValue.increment(1)
+                    nivel1: firebase.firestore.FieldValue.increment(1)
                 });
 
-                const ref2=refDoc.data().ref;
+                const ref2 = refDoc.data().ref;
                 if(ref2){
                     await db.collection("users").doc(ref2).update({
-                        nivel2:firebase.firestore.FieldValue.increment(1)
+                        nivel2: firebase.firestore.FieldValue.increment(1)
                     });
 
-                    const ref2Doc=await db.collection("users").doc(ref2).get();
-                    const ref3=ref2Doc.data().ref;
+                    const ref2Doc = await db.collection("users").doc(ref2).get();
+                    const ref3 = ref2Doc.data().ref;
                     if(ref3){
                         await db.collection("users").doc(ref3).update({
-                            nivel3:firebase.firestore.FieldValue.increment(1)
+                            nivel3: firebase.firestore.FieldValue.increment(1)
                         });
                     }
                 }
             }
         }
 
-        alert("Cadastro realizado com sucesso!");
+        alert("✅ Cadastro realizado com sucesso!");
         window.location.href="login.html";
 
     }catch(err){
