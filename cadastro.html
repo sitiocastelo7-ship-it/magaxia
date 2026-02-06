@@ -69,18 +69,22 @@ firebase.initializeApp(firebaseConfig);
 const auth=firebase.auth();
 const db=firebase.firestore();
 
-// 🔗 CAPTURAR ?ref DA URL
-const params=new URLSearchParams(window.location.search);
-const ref=params.get("ref");
+// ==================================================
+// 🔗 AUTOMÁTICO: CAPTURAR ?ref DO LINK DE CONVITE
+// ==================================================
+const params = new URLSearchParams(window.location.search);
+const ref = params.get("ref");
 
-// 🔗 AUTO-PREENCHER CÓDIGO DE CONVITE
+// 🔗 SE VEIO PELO LINK, PREENCHE O CÓDIGO AUTOMATICAMENTE
 if(ref){
-    const campoConvite=document.getElementById("codigoConvite");
-    campoConvite.value=ref;
-    campoConvite.readOnly=true;
+    const campoConvite = document.getElementById("codigoConvite");
+    campoConvite.value = ref;      // preenche sozinho
+    campoConvite.readOnly = true;  // trava para não alterar
 }
 
-// 🧾 CADASTRO
+// ==================================================
+// 🧾 CADASTRO (ORIGINAL)
+// ==================================================
 async function cadastrar(){
     const nome=document.getElementById("nome").value.trim();
     const telefone=document.getElementById("telefone").value.trim();
@@ -97,8 +101,8 @@ async function cadastrar(){
         return;
     }
 
-    // prioridade: campo > URL
-    const refToUse=codigoConvite || ref || null;
+    // prioridade: campo > link
+    const refToUse = codigoConvite || ref || null;
 
     // verificar telefone duplicado
     const existing=await db.collection("users").where("telefone","==",telefone).get();
@@ -132,7 +136,7 @@ async function cadastrar(){
             createdAt:firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // 🔗 PROCESSAR INDICAÇÃO
+        // 🔗 PROCESSAR INDICAÇÃO (ORIGINAL)
         if(refToUse){
             const refDoc=await db.collection("users").doc(refToUse).get();
             if(refDoc.exists){
