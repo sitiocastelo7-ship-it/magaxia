@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Ativos | Magaxia</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #1a1f3c, #0b0f1a 70%);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 520px;
+            width: 100%;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.06);
+            padding: 45px 30px;
+            border-radius: 26px;
+            backdrop-filter: blur(12px);
+            box-shadow: 0 0 35px rgba(0,0,0,0.5);
+        }
+
+        h1 {
+            font-size: 2.4rem;
+            margin-bottom: 12px;
+            background: linear-gradient(90deg, #39c6ff, #b84cff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .icone {
+            font-size: 4rem;
+            margin: 25px 0;
+            opacity: 0.9;
+        }
+
+        .mensagem {
+            font-size: 1.05rem;
+            opacity: 0.9;
+            margin-bottom: 35px;
+            line-height: 1.5;
+        }
+
+        .contador {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            color: #39c6ff;
+            font-weight: bold;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 14px 36px;
+            border-radius: 30px;
+            text-decoration: none;
+            color: white;
+            font-size: 1rem;
+            background: linear-gradient(90deg, #39c6ff, #b84cff);
+            box-shadow: 0 0 25px rgba(184, 76, 255, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .btn:hover {
+            transform: scale(1.07);
+            box-shadow: 0 0 40px rgba(57, 198, 255, 0.7);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>📊 Ativos</h1>
+
+        <div class="icone">📭</div>
+
+        <div class="contador">
+            Ativos: 0 no momento
+        </div>
+
+        <p class="mensagem">
+            Você ainda não possui ativos ativos no sistema.<br>
+            Comece investindo para gerar renda diária automática.
+        </p>
+
+        <a href="produtos.html" class="btn">💻 Ver Produtos</a>
+        <br><br>
+        <a href="painel.html" class="btn">⬅ Voltar ao início</a>
+    </div>
+
+</body>
+</html>
